@@ -1,0 +1,7 @@
+commerce_razorpay.checkout_form:
+  path: /razorpay-checkout
+  defaults:
+    _title: 'Administration menu'
+    _form: \Drupal\commerce_razorpay\Form\CommerceRazorpayCheckoutForm
+  requirements:
+    _permission: 'administer site configuration'

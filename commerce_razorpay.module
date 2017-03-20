@@ -1,0 +1,51 @@
+<?php
+
+
+
+namespace Razorpay\Api;
+
+function get_payments($count = 2, $skip = 1, $from = 1400826740) {
+  $api = new Api('rzp_test_26ccbdbfe0e84b', '69b2e24411e384f91213f22a');
+
+  $params = array(
+      'count' => 2,
+      'skip'  => 1,
+      'from'  => 1400826740
+  );
+
+  $payments = $api->payment->all($params);
+}
+/**
+ * Retrieve a refund of payment by id.
+ * @param  {[type]} $payment_id [description]
+ * @param  {[type]} $refund_id  [description]
+ * @return {[type]}             [description]
+ */
+
+function razorpay_payment_refund($payment_id = 'pay_29QQoUBi66xm2f', $refund_id = 'rfnd_AABBdHIieexn5c') {
+
+
+  $api = new Api('rzp_test_26ccbdbfe0e84b', '69b2e24411e384f91213f22a');
+
+  $payment = $api->payment->fetch($payment_id)->refunds()->fetch($refund_id);
+
+}
+
+function razorpay_payment_all_refunds($payment_id = 'pay_29QQoUBi66xm2f', $from = 1500826740, $to = 1500826760, $count = 2, $skip = 1) {
+  $api = new Api('rzp_test_26ccbdbfe0e84b', '69b2e24411e384f91213f22a');
+
+  $params = array(
+      'from'  => 1500826740,
+      'to'    => 1500826760,
+      'count' => 2,
+      'skip'  => 1
+  );
+
+  $payments = $api->payment->fetch($payment_id)->refunds()->all($params);
+
+}
+
+/**
+ * Create an order.
+ * @return [type] [description]
+ */

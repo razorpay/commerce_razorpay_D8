@@ -1,0 +1,4 @@
+commerce_razorpay.checkout_form:
+  route_name: commerce_razorpay.checkout_form
+  title: 'Administration menu'
+  description: 'Adjust administration menu settings.'
