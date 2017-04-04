@@ -1,10 +1,5 @@
 {
-  "require": {
-    "razorpay/razorpay": "1.*"
-  },
-  "autoload": {
-    "psr-4": {
-      "Acme\\": "src/"
+    "require": {
+        "razorpay/razorpay": "2.0.0"
     }
-  }
 }
