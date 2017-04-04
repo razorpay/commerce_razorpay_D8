@@ -52,17 +52,17 @@
     },
     {
         "name": "razorpay/razorpay",
-        "version": "1.2.9",
-        "version_normalized": "1.2.9.0",
+        "version": "2.0.0",
+        "version_normalized": "2.0.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/razorpay/razorpay-php.git",
-            "reference": "940069d5af481876d8b704af1d3678729489191f"
+            "reference": "e3cfbcf484ceba1e0f896114fa5b84e8145a311c"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/razorpay/razorpay-php/zipball/940069d5af481876d8b704af1d3678729489191f",
-            "reference": "940069d5af481876d8b704af1d3678729489191f",
+            "url": "https://api.github.com/repos/razorpay/razorpay-php/zipball/e3cfbcf484ceba1e0f896114fa5b84e8145a311c",
+            "reference": "e3cfbcf484ceba1e0f896114fa5b84e8145a311c",
             "shasum": ""
         },
         "require": {
@@ -73,7 +73,7 @@
         "require-dev": {
             "raveren/kint": "1.*"
         },
-        "time": "2017-01-03 09:35:10",
+        "time": "2017-03-07 02:26:27",
         "type": "library",
         "installation-source": "dist",
         "autoload": {

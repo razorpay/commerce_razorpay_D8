@@ -1,0 +1,5 @@
+commerce_razorpay.payment:
+  js:
+    js/commerce_razorpay.js: {}
+    dependencies:
+      - core/jquery
