@@ -1,4 +1,3 @@
-
 (function($) {
     Drupal.behaviors.commerce_razorpay = {
         attach: function(context, settings) {
@@ -8,7 +7,6 @@
             var logo = settings.commerce_razorpay.logo;
             var merchant_order_id = settings.commerce_razorpay.order_id;
             var commerce_order_id = settings.commerce_razorpay.commerce_order_id;
-            var payment_id = '';
             var payment_settings = JSON.stringify(settings.commerce_razorpay.payment_settings);
             var name = settings.commerce_razorpay.name;
             var address = name + " " + settings.commerce_razorpay.address;
@@ -20,10 +18,7 @@
                 "description": "Purchase Description",
                 "image": logo,
                 "order_id": merchant_order_id,
-                //  Pass phone number.
-
                 "handler": function(response) {
-
                     window.location = '/capture-payment?amount=' + amount + '&order_id=' + commerce_order_id + '&payment_settings=' + payment_settings + '&response=' + JSON.stringify(response);
                 },
                 "prefill": {
@@ -41,9 +36,6 @@
 
                 }
             };
-
-            console.log("options");
-            console.log(options);
 
             var rzp1 = new Razorpay(options);
             rzp1.open();

@@ -23,15 +23,6 @@ class RazorpayForm extends BasePaymentOffsiteForm {
     $form = parent::buildConfigurationForm($form, $form_state);
     global $base_url;
 
-
-//    $form['#attached']['library'][] = 'commerce_razorpay/commerce_razorpay.payment';
-
-//    $form['#attached'] =[
-//      'library' => ['commerce_razorpay/commerce_razorpay.payment']
-//    ];
-//    $form['#attached']['js'][] = 'https://checkout.razorpay.com/v1/checkout.js';
-
-
     /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
     $payment = $this->entity;
 
@@ -75,7 +66,7 @@ class RazorpayForm extends BasePaymentOffsiteForm {
     $billing_profile = $order->getBillingProfile();
 //    $billing_address = $address;
 
-    $form['#attached']['library'][] = 'commerce_razorpay/commerce_razorpay.custom_payment';
+    $form['#attached']['library'][] = 'commerce_razorpay/commerce_razorpay.payment';
 
     $form['#attached']['drupalSettings']['commerce_razorpay'] = array(
       'amount' => $amount,
