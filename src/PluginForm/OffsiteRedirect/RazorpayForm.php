@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Psy\Exception\Exception;
 use Razorpay\Api\Api;
 use Razorpay\Api\Errors\SignatureVerificationError;
+use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
 
 /**
  * Provides the Off-site payment form.
@@ -22,25 +23,29 @@ class RazorpayForm extends BasePaymentOffsiteForm {
     $form = parent::buildConfigurationForm($form, $form_state);
     global $base_url;
 
+
+//    $form['#attached']['library'][] = 'commerce_razorpay/commerce_razorpay.payment';
+
 //    $form['#attached'] =[
 //      'library' => ['commerce_razorpay/commerce_razorpay.payment']
 //    ];
-//    $build['#attached']['drupalSettings']['fluffiness']['cuddlySlider']['foo'] = 'bar';
 //    $form['#attached']['js'][] = 'https://checkout.razorpay.com/v1/checkout.js';
 
 
     /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
     $payment = $this->entity;
-//    print '<pre>'; print_r("this entity"); print '</pre>';
-//    print '<pre>'; print_r($payment); print '</pre>';exit;
 
     $redirect_method = 'post';
     /** @var \Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayInterface $payment_gateway_plugin */
     $payment_gateway_plugin = $payment->getPaymentGateway()->getPlugin();
 
+//    print '<pre>'; print_r("payment gateway plugin"); print '</pre>';
+//    print '<pre>'; print_r($payment_gateway_plugin); print '</pre>';exit;
+
     //$owner = \Drupal::routeMatch()->getParameter('commerce_order')->getCustomer();
     $order_id = \Drupal::routeMatch()->getParameter('commerce_order')->id();
     $order = Order::load($order_id);
+
 
 
 //    $billing_profile = $order->getBillingProfile();
@@ -48,50 +53,53 @@ class RazorpayForm extends BasePaymentOffsiteForm {
 
 
 //    print '<pre>'; print_r("order"); print '</pre>';
-//    print '<pre>'; print_r($order); print '</pre>';exit;
+//    print '<pre>'; print_r($order_id); print '</pre>';exit;
 
 
-    $amount = $payment->getAmount()->getNumber();
+    $amount = ($payment->getAmount()->getNumber()) * 100;
+
     $key_id = $payment_gateway_plugin->getConfiguration()['key_id'];
     $key_secret = $payment_gateway_plugin->getConfiguration()['key_secret'];
 //    $base_url = '';
     $currency = $payment_gateway_plugin->getConfiguration()['currency'];
+    $currency = 'INR';
     $receipt = $order_id;
     $payment_capture = FALSE;
 
-    $lib_path = (function_exists('libraries_get_path')) ? libraries_get_path('razorpay-php') : 'libraries/razorpay-php';
-    $platform = $lib_path . '/Razorpay.php';
-//    dsm($platform);
-    $client = NULL;
-    $result = NULL;
-    require $platform;
+//    $lib_path = (function_exists('libraries_get_path')) ? libraries_get_path('razorpay-php') : 'libraries/razorpay-php';
+//    $platform = $lib_path . '/Razorpay.php';
+////    dsm($platform);
+//    $client = NULL;
+//    $result = NULL;
+//    require $platform;
 
 
-    try {
-      include __DIR__ . $platform;
-      if (!@include __DIR__ . $platform) {
-        \Drupal::logger('error')->error('Error Loading  Library');
-      }
-      else {
-        $api = new Api($key_id, $key_secret);
-        $razorpay_order = $api->order->create(array(
-          'amount' => $amount,
-          "currency" => $currency,
-          "receipt" => $receipt,
-          'payment_capture' => $payment_capture
-        ));
+//    try {
+//      include __DIR__ . $platform;
+//      if (!@include __DIR__ . $platform) {
+//        \Drupal::logger('error')->error('Error Loading  Library');
+//      }
+//      else {
+//        $api = new Api($key_id, $key_secret);
+//        $razorpay_order = $api->order->create(array(
+//          'amount' => $amount,
+//          "currency" => $currency,
+//          "receipt" => $receipt,
+//          'payment_capture' => $payment_capture
+//        ));
+//
+//        $merchant_order_id = $razorpay_order->id;
+//        $merchant_order_id = '';
+//
+//
+//      }
+//    } catch (Exception $e) {
+//
+//      return NULL;
+//    }
 
-        $merchant_order_id = $razorpay_order->id;
-        $merchant_order_id = '';
-
-
-      }
-    } catch (Exception $e) {
-
-      return NULL;
-    }
-
-
+//    print '<pre>'; print_r("configuration"); print '</pre>';
+//    print '<pre>'; print_r($payment_gateway_plugin->getConfiguration()); print '</pre>'; exit;
     $api = new Api($key_id, $key_secret);
     $razorpay_order = $api->order->create(array(
       'amount' => $amount,
@@ -101,14 +109,14 @@ class RazorpayForm extends BasePaymentOffsiteForm {
     ));
 
     $merchant_order_id = $razorpay_order->id;
-    $merchant_order_id = '';
 
-    $payment_method = '';
+    $payment_method =$payment_gateway_plugin->getConfiguration();
     $billing_address = $address;
 
-    $form['#attached'] = [
-      'library' => ['commerce_razorpay/commerce_razorpay.payment']
-    ];
+//    $form['#attached'] = [
+//      'library' => ['commerce_razorpay/commerce_razorpay.payment']
+//    ];
+    $form['#attached']['library'][] = 'commerce_razorpay/commerce_razorpay.custom_payment';
 
     $form['#attached']['drupalSettings']['commerce_razorpay'] = array(
       'amount' => $amount,
@@ -116,7 +124,7 @@ class RazorpayForm extends BasePaymentOffsiteForm {
       'logo' => $base_url . "/" . drupal_get_path('module', 'commerce_razorpay') . '/logo.jpg',
       'order_id' => $merchant_order_id,
       'commerce_order_id' => $order_id,
-      'payment_settings' => $payment_method['settings'],
+      'payment_settings' => $payment_method,
       'billing_address' => $billing_address
     );
 

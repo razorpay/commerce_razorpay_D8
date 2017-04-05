@@ -1,0 +1,1 @@
+IN drupal root composer.json, in merge-plugin include modules/*/composer.json  OR modules/custom/*/composer.json and then run composer update from docroot to include razorpay library in the docroot.

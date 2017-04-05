@@ -1,7 +1,9 @@
-commerce_razorpay.checkout_form:
-  path: /razorpay-checkout
+commerce_razorpay.capture_payment:
+  path: '/capture-payment'
   defaults:
-    _title: 'Administration menu'
-    _form: \Drupal\commerce_razorpay\Form\CommerceRazorpayCheckoutForm
+    _controller: '\Drupal\commerce_razorpay\Controller\Controller::capturePayment'
   requirements:
-    _permission: 'administer site configuration'
+    _access: 'TRUE'
+      #@TODO to be changed later.
+      # Needs to be accessed by an anonymous user.
+

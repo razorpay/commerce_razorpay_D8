@@ -1,10 +1,7 @@
-alert("outside");
+
 (function($) {
     Drupal.behaviors.commerce_razorpay = {
         attach: function(context, settings) {
-            alert("inside");
-            console.log("settings");
-            console.log(settings);
 
             var amount = settings.commerce_razorpay.amount;
             var key = settings.commerce_razorpay.key;
@@ -43,6 +40,9 @@ alert("outside");
 
                 }
             };
+           
+            console.log("options");
+            console.log(options);
 
             var rzp1 = new Razorpay(options);
             rzp1.open();

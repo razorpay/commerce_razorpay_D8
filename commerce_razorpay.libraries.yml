@@ -1,7 +1,11 @@
 commerce_razorpay.payment:
   js:
     base:
-      'https://checkout.razorpay.com/v1/checkout.js': { external: true }
+      'https://checkout.razorpay.com/v1/checkout.js': { type: external }
+
+commerce_razorpay.custom_payment:
+  js:
+    js/checkout.js: {}
     js/commerce_razorpay.js: {}
     dependencies:
       - core/jquery
