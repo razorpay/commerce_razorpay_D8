@@ -67,6 +67,8 @@ class RazorpayRedirect extends OffsitePaymentGatewayBase {
    * {@inheritdoc}
    */
   public function onReturn(OrderInterface $order, Request $request) {
+//    print '<pre>'; print_r("request"); print '</pre>';
+//    print '<pre>'; print_r($request); print '</pre>';exit;
 
     $additionalCharges = $request->get('additionalCharges');
     $status = $request->get('status');
@@ -79,33 +81,20 @@ class RazorpayRedirect extends OffsitePaymentGatewayBase {
     $email = $request->get('email');
     $salt = $this->configuration['psalt'];
 
-    if (isset($additionalCharges)) {
-      $retHashSeq = $additionalCharges . '|' . $salt . '|' . $status . '|||||||||||' . $email . '|' . $firstname . '|' . $productinfo . '|' . $amount . '|' . $txnid . '|' . $key;
-    }
-    else {
-      $retHashSeq = $salt . '|' . $status . '|||||||||||' . $email . '|' . $firstname . '|' . $productinfo . '|' . $amount . '|' . $txnid . '|' . $key;
-    }
+    $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
+    $payment = $payment_storage->create([
+      'state' => $status,
+      'amount' => $order->getTotalPrice(),
+      'payment_gateway' => $this->entityId,
+      'order_id' => $order->id(),
+      'test' => $this->getMode() == 'test',
+      'remote_id' => $txnid,
+      'remote_state' => $request->get('payment_status'),
+      'authorized' => REQUEST_TIME,
+    ]);
+    $payment->save();
+    drupal_set_message($this->t('Your payment was successful with Order id : @orderid and Transaction id : @transaction_id', ['@orderid' => $order->id(), '@transaction_id' => $txnid]));
 
-    $hash = hash("sha512", $retHashSeq);
-
-    if ($hash != $posted_hash) {
-      drupal_set_message($this->t('Invalid Transaction. Please try again'), 'error');
-    }
-    else {
-      $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
-      $payment = $payment_storage->create([
-        'state' => $status,
-        'amount' => $order->getTotalPrice(),
-        'payment_gateway' => $this->entityId,
-        'order_id' => $order->id(),
-        'test' => $this->getMode() == 'test',
-        'remote_id' => $txnid,
-        'remote_state' => $request->get('payment_status'),
-        'authorized' => REQUEST_TIME,
-      ]);
-      $payment->save();
-      drupal_set_message($this->t('Your payment was successful with Order id : @orderid and Transaction id : @transaction_id', ['@orderid' => $order->id(), '@transaction_id' => $txnid]));
-    }
   }
 
   /**
