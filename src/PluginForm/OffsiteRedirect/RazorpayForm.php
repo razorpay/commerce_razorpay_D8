@@ -2,10 +2,12 @@
 
 namespace Drupal\commerce_razorpay\PluginForm\OffsiteRedirect;
 
+use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_payment\PluginForm\PaymentOffsiteForm as BasePaymentOffsiteForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
-use Drupal\commerce_order\Entity\Order;
+use Psy\Exception\Exception;
+use Razorpay\Api\Api;
+use Razorpay\Api\Errors\SignatureVerificationError;
 
 /**
  * Provides the Off-site payment form.
@@ -18,13 +20,14 @@ class RazorpayForm extends BasePaymentOffsiteForm {
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
+    global $base_url;
 
-    $form['#attached'] =[
-      'library' => ['commerce_razorpay/commerce_razorpay.payment']
-    ];
+//    $form['#attached'] =[
+//      'library' => ['commerce_razorpay/commerce_razorpay.payment']
+//    ];
+//    $build['#attached']['drupalSettings']['fluffiness']['cuddlySlider']['foo'] = 'bar';
+//    $form['#attached']['js'][] = 'https://checkout.razorpay.com/v1/checkout.js';
 
-
-//    $form['#attached']['library'] =  ['commerce_razorpay/commerce_razorpay.payment'];
 
     /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
     $payment = $this->entity;
@@ -39,20 +42,86 @@ class RazorpayForm extends BasePaymentOffsiteForm {
     $order_id = \Drupal::routeMatch()->getParameter('commerce_order')->id();
     $order = Order::load($order_id);
 
-    $key_id = $payment_gateway_plugin->getConfiguration()['key_id'];
-    $key_secret = $payment_gateway_plugin->getConfiguration()['key_secret'];
-
 
 //    $billing_profile = $order->getBillingProfile();
-//    $address = $order->getBillingProfile()->address->first();
-
-
+    $address = $order->getBillingProfile()->address->first();
 
 
 //    print '<pre>'; print_r("order"); print '</pre>';
 //    print '<pre>'; print_r($order); print '</pre>';exit;
 
 
+    $amount = $payment->getAmount()->getNumber();
+    $key_id = $payment_gateway_plugin->getConfiguration()['key_id'];
+    $key_secret = $payment_gateway_plugin->getConfiguration()['key_secret'];
+//    $base_url = '';
+    $currency = $payment_gateway_plugin->getConfiguration()['currency'];
+    $receipt = $order_id;
+    $payment_capture = FALSE;
+
+    $lib_path = (function_exists('libraries_get_path')) ? libraries_get_path('razorpay-php') : 'libraries/razorpay-php';
+    $platform = $lib_path . '/Razorpay.php';
+//    dsm($platform);
+    $client = NULL;
+    $result = NULL;
+    require $platform;
+
+
+    try {
+      include __DIR__ . $platform;
+      if (!@include __DIR__ . $platform) {
+        \Drupal::logger('error')->error('Error Loading  Library');
+      }
+      else {
+        $api = new Api($key_id, $key_secret);
+        $razorpay_order = $api->order->create(array(
+          'amount' => $amount,
+          "currency" => $currency,
+          "receipt" => $receipt,
+          'payment_capture' => $payment_capture
+        ));
+
+        $merchant_order_id = $razorpay_order->id;
+        $merchant_order_id = '';
+
+
+      }
+    } catch (Exception $e) {
+
+      return NULL;
+    }
+
+
+    $api = new Api($key_id, $key_secret);
+    $razorpay_order = $api->order->create(array(
+      'amount' => $amount,
+      "currency" => $currency,
+      "receipt" => $receipt,
+      'payment_capture' => $payment_capture
+    ));
+
+    $merchant_order_id = $razorpay_order->id;
+    $merchant_order_id = '';
+
+    $payment_method = '';
+    $billing_address = $address;
+
+    $form['#attached'] = [
+      'library' => ['commerce_razorpay/commerce_razorpay.payment']
+    ];
+
+    $form['#attached']['drupalSettings']['commerce_razorpay'] = array(
+      'amount' => $amount,
+      'key' => $key_id,
+      'logo' => $base_url . "/" . drupal_get_path('module', 'commerce_razorpay') . '/logo.jpg',
+      'order_id' => $merchant_order_id,
+      'commerce_order_id' => $order_id,
+      'payment_settings' => $payment_method['settings'],
+      'billing_address' => $billing_address
+    );
+
+
+//    $form['#attached']['library'] =  ['commerce_razorpay/commerce_razorpay.payment'];
 
 //    if ($mode == 'test') {
 //      $redirect_url = self::PAYUMONEY_API_TEST_URL;

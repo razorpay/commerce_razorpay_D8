@@ -17,11 +17,11 @@ class ComposerStaticInitc301cbdc5a6e7c491dfe3ceb91ae80c6
     public static $prefixDirsPsr4 = array (
         'Razorpay\\Tests\\' => 
         array (
-            0 => __DIR__ . '/..' . '/razorpay/razorpay/tests',
+            0 => __DIR__ . '/..',
         ),
         'Razorpay\\Api\\' => 
         array (
-            0 => __DIR__ . '/..' . '/razorpay/razorpay/src',
+            0 => __DIR__ . '/..',
         ),
     );
 
