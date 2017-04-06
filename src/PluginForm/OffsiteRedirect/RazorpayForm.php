@@ -39,6 +39,8 @@ class RazorpayForm extends BasePaymentOffsiteForm {
 
 
 
+
+
     $billing_profile = $order->getBillingProfile();
 
     $address = $order->getBillingProfile()->address->first();
@@ -61,10 +63,36 @@ class RazorpayForm extends BasePaymentOffsiteForm {
     ));
 
     $merchant_order_id = $razorpay_order->id;
+    $order->setData('merchant_order_id', $merchant_order_id);
+    $order->save();
 
     $payment_method =$payment_gateway_plugin->getConfiguration();
     $billing_profile = $order->getBillingProfile();
 //    $billing_address = $address;
+
+
+//    $store_type = \Drupal::entityTypeManager()->getStorage('commerce_payment')->load('testing');
+//    $store_type->setDescription('The default store');
+//    $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
+
+
+
+//    $order = Order::load(1);
+//    // refer payment checkout test.php file.
+////    $order->payment_method = $this->orderPaymentMethod;
+//    $order->save();
+
+
+
+//    $entity_type_manager = \Drupal::entityTypeManager();
+//    $order_storage = $entity_type_manager->getStorage('commerce_order');
+//    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+//    $order = $order_storage->load($order_id);
+
+//
+//    $order->get('coupons')->setValue([]);
+//    $order->save();
+
 
     $form['#attached']['library'][] = 'commerce_razorpay/commerce_razorpay.payment';
 

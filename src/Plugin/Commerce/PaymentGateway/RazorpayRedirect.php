@@ -5,6 +5,7 @@ namespace Drupal\commerce_razorpay\Plugin\Commerce\PaymentGateway;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayBase;
 use Drupal\Core\Form\FormStateInterface;
+use Razorpay\Api\Api;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -67,33 +68,59 @@ class RazorpayRedirect extends OffsitePaymentGatewayBase {
    * {@inheritdoc}
    */
   public function onReturn(OrderInterface $order, Request $request) {
-//    print '<pre>'; print_r("request"); print '</pre>';
-//    print '<pre>'; print_r($request); print '</pre>';exit;
 
-    $additionalCharges = $request->get('additionalCharges');
-    $status = $request->get('status');
-    $firstname = $request->get('firstname');
-    $txnid = $request->get('txnid');
-    $amount = $request->get('amount');
-    $posted_hash = $request->get('hash');
-    $key = $request->get('key');
-    $productinfo = $request->get('productinfo');
-    $email = $request->get('email');
-    $salt = $this->configuration['psalt'];
+    $key_id = $this->configuration['key_id'];
+    $key_secret = $this->configuration['key_secret'];
+    $api = new Api($key_id, $key_secret);
+    $payment = $api->order->fetch($order->getData('merchant_order_id'));
+    $payment_object = $payment->payments();
+    $status = $payment_object['items'][0]->status; // eg : refunded, captured, authorized, failed.
+    $refund_status = $payment_object['items'][0]->refund_status; // eg : full, partial
+    $amount_refunded = ($payment_object['items'][0]->amount_refunded)/100;
+    $service_tax = $payment_object['items'][0]->service_tax;
+    $amount = $payment_object['items'][0]->amount;
+    // card_id
+    //  @TODO Save Card details , method of payement etc.
+
+
+    // Succeessful.
+    $message = '';
+    $remote_status = '';
+    if ($status == "captured") {
+      // Status is success.
+      $remote_status = t('Success');
+      $message = $this->t('Your payment was successful with Order id : @orderid has been received at : @date', ['@orderid' => $order->id(), '@date' => date("d-m-Y H:i:s", REQUEST_TIME)]);
+      $status = COMMERCE_PAYMENT_STATUS_SUCCESS;
+    }
+    elseif ($status == "authorized") {
+      // Batch process - Pending orders.
+      $remote_status = t('Pending');
+      $message = $this->t('Your payment with Order id : @orderid is pending at : @date', ['@orderid' => $order->id(), '@date' => date("d-m-Y H:i:s", REQUEST_TIME)]);
+      $status = COMMERCE_PAYMENT_STATUS_PENDING;
+    }
+    elseif ($status == "failed") {
+      // Failed transaction.
+      $remote_status = t('Failure');
+      $message = $this->t('Your payment with Order id : @orderid failed at : @date', ['@orderid' => $order->id(), '@date' => date("d-m-Y H:i:s", REQUEST_TIME)]);
+      $status = COMMERCE_PAYMENT_STATUS_FAILURE;
+    }
+
 
     $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
     $payment = $payment_storage->create([
-      'state' => $status,
-      'amount' => $order->getTotalPrice(),
-      'payment_gateway' => $this->entityId,
-      'order_id' => $order->id(),
-      'test' => $this->getMode() == 'test',
-      'remote_id' => $txnid,
-      'remote_state' => $request->get('payment_status'),
-      'authorized' => REQUEST_TIME,
-    ]);
+        'state' => $status,
+        'amount' => $order->getTotalPrice(),
+        'payment_gateway' => $this->entityId,
+        'order_id' => $order->id(),
+        'test' => $this->getMode() == 'test',
+        'remote_id' => $payment_object['items'][0]->id,
+        'remote_state' => $remote_status ? $remote_status : $request->get('payment_status'),
+        'authorized' => REQUEST_TIME,
+      ]
+    );
+
     $payment->save();
-    drupal_set_message($this->t('Your payment was successful with Order id : @orderid and Transaction id : @transaction_id', ['@orderid' => $order->id(), '@transaction_id' => $txnid]));
+    drupal_set_message($message);
 
   }
 
