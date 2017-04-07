@@ -30,31 +30,8 @@ class Controller extends ControllerBase{
     if($payment->status == 'authorized') {
       $payment->capture(array('amount' => $amount));
     }
-
-    $card = $api->card->fetch($payment->card_id);
-//    print '<pre>'; print_r("card"); print '</pre>';
-//    print '<pre>'; print_r($card); print '</pre>';exit;
-
-//    $order = Order::load($commerce_order_id);
-//    $payment_method = $payment->method;
-//    $order->set('payment_method', $payment_method);
-//
-//    switch($payment_method) {
-//      case 'card':
-//        $order->setData('card_id',$payment->card_id);
-//        break;
-//      case 'bank';
-//        $order->setData('bank',$payment->bank);
-//        break;
-//      case 'wallet':
-//        $order->setData('wallet',$payment->wallet);
-//        break;
-//      case 'vpa':
-//        $order->setData('vpa',$payment->vpa);
-//        break;
-//    }
-//    $order->save();
-
+    // @TODO Save payment method details in order object.
+    
     // Validating  Signature.
     $success = true;
     $error = "Payment Failed";
