@@ -30,9 +30,6 @@ class RazorpayForm extends BasePaymentOffsiteForm {
     /** @var \Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayInterface $payment_gateway_plugin */
     $payment_gateway_plugin = $payment->getPaymentGateway()->getPlugin();
 
-//    print '<pre>'; print_r("payment gateway plugin"); print '</pre>';
-//    print '<pre>'; print_r($payment_gateway_plugin); print '</pre>';exit;
-
     $owner = \Drupal::routeMatch()->getParameter('commerce_order')->getCustomer();
     $order_id = \Drupal::routeMatch()->getParameter('commerce_order')->id();
     $order = Order::load($order_id);
@@ -67,7 +64,6 @@ class RazorpayForm extends BasePaymentOffsiteForm {
     $order->save();
 
     $payment_method =$payment_gateway_plugin->getConfiguration();
-    $billing_profile = $order->getBillingProfile();
 //    $billing_address = $address;
 
 

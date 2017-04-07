@@ -80,7 +80,7 @@ class RazorpayRedirect extends OffsitePaymentGatewayBase {
     $service_tax = $payment_object['items'][0]->service_tax;
     $amount = $payment_object['items'][0]->amount;
     // card_id
-    //  @TODO Save Card details , method of payement etc.
+    //  @TODO Save Card details , method of payment etc.
 
 
     // Succeessful.
