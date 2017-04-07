@@ -34,10 +34,6 @@ class RazorpayForm extends BasePaymentOffsiteForm {
     $order_id = \Drupal::routeMatch()->getParameter('commerce_order')->id();
     $order = Order::load($order_id);
 
-
-
-
-
     $billing_profile = $order->getBillingProfile();
 
     $address = $order->getBillingProfile()->address->first();
@@ -46,8 +42,7 @@ class RazorpayForm extends BasePaymentOffsiteForm {
 
     $key_id = $payment_gateway_plugin->getConfiguration()['key_id'];
     $key_secret = $payment_gateway_plugin->getConfiguration()['key_secret'];
-    $currency = $payment_gateway_plugin->getConfiguration()['currency'];
-    $currency = 'INR';
+    $currency = $payment->getAmount()->getCurrencyCode();
     $receipt = $order_id;
     $payment_capture = FALSE;
 
