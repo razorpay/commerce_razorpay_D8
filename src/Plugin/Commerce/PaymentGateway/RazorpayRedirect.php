@@ -2,9 +2,15 @@
 
 namespace Drupal\commerce_razorpay\Plugin\Commerce\PaymentGateway;
 
+use CommerceGuys\AuthNet\CreateTransactionRequest;
+use CommerceGuys\AuthNet\DataTypes\TransactionRequest;
 use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_payment\Entity\PaymentInterface;
+use Drupal\commerce_payment\Exception\InvalidRequestException;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayBase;
+use Drupal\commerce_price\Price;
 use Drupal\Core\Form\FormStateInterface;
+use GuzzleHttp\Exception\RequestException;
 use Razorpay\Api\Api;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -134,5 +140,72 @@ class RazorpayRedirect extends OffsitePaymentGatewayBase {
       '@gateway' => $this->getDisplayLabel(),
     ]), 'error');
   }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function refundPayment(PaymentInterface $payment, Price $amount = NULL) {
+
+
+    $key_id = $this->configuration['key_id'];
+    $key_secret = $this->configuration['key_secret'];
+    $api = new Api($key_id, $key_secret);
+
+    if (empty($payment->getRemoteId())) {
+      throw new InvalidRequestException('Could not determine the remote payment details.');
+    }
+
+    $razorpay_payment_id = $payment->getRemoteId();
+    $razorpay_payment = $api->payment->fetch($razorpay_payment_id);
+
+
+
+
+    if (!in_array($payment->getState()->value, ['capture_completed', 'capture_partially_refunded'])) {
+      throw new \InvalidArgumentException('Only payments in the "capture_completed" and "capture_partially_refunded" states can be refunded.');
+    }
+
+    // If not specified, refund the entire amount.
+    $amount = $amount ?: $payment->getAmount();
+
+    // Validate the requested amount.
+    $balance = $payment->getBalance();
+    if ($amount->greaterThan($balance)) {
+      throw new InvalidRequestException(sprintf("Can't refund more than %s.", $balance->__toString()));
+    }
+
+
+
+    try {
+      $old_refunded_amount = $payment->getRefundedAmount();
+      $new_refunded_amount = $old_refunded_amount->add($amount);
+
+//      if($new_refunded_amount == '') {
+//        $payment->refund();
+//      } else {
+//        $payment->refund(array('amount' => $new_refunded_amount* 100)); // for partial refund
+//      }
+
+
+      if ($new_refunded_amount->lessThan($payment->getAmount())) {
+        $payment->state = 'capture_partially_refunded';
+        $razorpay_payment->refund();
+      }
+      else {
+        $payment->state = 'capture_refunded';
+        $razorpay_payment->refund(array('amount' => $new_refunded_amount* 100)); // for partial refund
+      }
+
+      $payment
+        ->setRefundedAmount($new_refunded_amount)
+        ->save();
+    }
+    catch (RequestException $e) {
+      throw new InvalidRequestException("Could not refund the payment.", $e->getCode(), $e);
+    }
+
+  }
+
 
 }
