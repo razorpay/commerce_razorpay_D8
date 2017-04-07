@@ -1,18 +1,16 @@
 <?php
 
 namespace Drupal\commerce_razorpay\Controller;
-use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_order\Entity\Order;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Razorpay\Api\Api;
 use Razorpay\Api\Errors\SignatureVerificationError;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
-
 /**
- * Class GithubConnectController.
- *
- * @package Drupal\github_connect\Controller
+ * Class Controller
+ * @package Drupal\commerce_razorpay\Controller
  */
 class Controller extends ControllerBase{
 
@@ -20,15 +18,7 @@ class Controller extends ControllerBase{
     $amount = $_GET['amount'];
     $commerce_order_id = $_GET['order_id'];
     $payment_settings = json_decode($_GET['payment_settings']);
-
-//    print '<pre>'; print_r("payment settings"); print '</pre>';
-//    print '<pre>'; print_r($_GET['payment_settings']); print '</pre>';
-
-
     $response = json_decode($_GET['response']);
-
-//    print '<pre>'; print_r("response"); print '</pre>';
-//    print '<pre>'; print_r($response); print '</pre>';exit;
     $razorpay_signature = $response->razorpay_signature;
     $razorpay_payment_id = $response->razorpay_payment_id;
     $razorpay_order_id = $response->razorpay_order_id;
@@ -41,13 +31,29 @@ class Controller extends ControllerBase{
       $payment->capture(array('amount' => $amount));
     }
 
-//    $order->data['razorpay_payment_id'] = $razorpay_payment_id;
-    // $order->data['merchant_order_id'] = $razorpay_order_id;
-//    $order->save();
+    $card = $api->card->fetch($payment->card_id);
+//    print '<pre>'; print_r("card"); print '</pre>';
+//    print '<pre>'; print_r($card); print '</pre>';exit;
 
-//    commerce_razorpay_transaction($key_id, $key_secret, $order);
-    // @TODO Save drupal commerce transaction.
-    // Send the customer on to the next checkout page.
+//    $order = Order::load($commerce_order_id);
+//    $payment_method = $payment->method;
+//    $order->set('payment_method', $payment_method);
+//
+//    switch($payment_method) {
+//      case 'card':
+//        $order->setData('card_id',$payment->card_id);
+//        break;
+//      case 'bank';
+//        $order->setData('bank',$payment->bank);
+//        break;
+//      case 'wallet':
+//        $order->setData('wallet',$payment->wallet);
+//        break;
+//      case 'vpa':
+//        $order->setData('vpa',$payment->vpa);
+//        break;
+//    }
+//    $order->save();
 
     // Validating  Signature.
     $success = true;
@@ -73,27 +79,14 @@ class Controller extends ControllerBase{
       }
     }
 
-    // If Payment is successfully captured at razorpay end, then update
-    // commerce order status to checkout_complete and redirect page to complete.
+    // If Payment is successfully captured at razorpay end.
     if ($success === true) {
-      $message = "Your payment was successful. Payment ID: {$razorpay_payment_id}";
-
-
-
-
+      $message = "Payment ID: {$razorpay_payment_id}";
       drupal_set_message(t($message));
-
-
     }
     else {
-
       $message = "Your payment failed " . $error;
       drupal_set_message(t($message), 'error');
-//      return Url::fromRoute('commerce_payment.checkout.review', [
-//        'commerce_order' => $commerce_order_id,
-//        'step' => 'payment',
-//      ], ['absolute' => TRUE])->toString();
-
     }
     $url =  Url::fromRoute('commerce_payment.checkout.return', [
       'commerce_order' => $commerce_order_id,

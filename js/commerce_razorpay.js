@@ -15,7 +15,7 @@
                 "key": key,
                 "amount": amount, // 100 paise = INR 1
                 "name": name,
-                "description": "Purchase Description",
+                "description": "",
                 "image": logo,
                 "order_id": merchant_order_id,
                 "handler": function(response) {
@@ -24,8 +24,8 @@
                 "prefill": {
                     "name": name,
                     "email": email,
-                    "contact": 8425989607,
-                    "method": 'card',
+                    "contact": "",
+                    "method": '' // eg: card, etc.
                 },
                 "notes": {
                     "address": address

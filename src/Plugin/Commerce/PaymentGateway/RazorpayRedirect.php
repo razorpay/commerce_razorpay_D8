@@ -2,8 +2,6 @@
 
 namespace Drupal\commerce_razorpay\Plugin\Commerce\PaymentGateway;
 
-use CommerceGuys\AuthNet\CreateTransactionRequest;
-use CommerceGuys\AuthNet\DataTypes\TransactionRequest;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\commerce_payment\Exception\InvalidRequestException;
@@ -31,7 +29,6 @@ use Symfony\Component\HttpFoundation\Request;
  * )
  */
 class RazorpayRedirect extends OffsitePaymentGatewayBase {
-
 
   /**
    * {@inheritdoc}
@@ -85,9 +82,6 @@ class RazorpayRedirect extends OffsitePaymentGatewayBase {
     $amount_refunded = ($payment_object['items'][0]->amount_refunded)/100;
     $service_tax = $payment_object['items'][0]->service_tax;
     $amount = $payment_object['items'][0]->amount;
-    // card_id
-    //  @TODO Save Card details , method of payment etc.
-
 
     // Succeessful.
     $message = '';
@@ -110,7 +104,6 @@ class RazorpayRedirect extends OffsitePaymentGatewayBase {
       $message = $this->t('Your payment with Order id : @orderid failed at : @date', ['@orderid' => $order->id(), '@date' => date("d-m-Y H:i:s", REQUEST_TIME)]);
       $status = COMMERCE_PAYMENT_STATUS_FAILURE;
     }
-
 
     $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
     $payment = $payment_storage->create([
@@ -147,7 +140,7 @@ class RazorpayRedirect extends OffsitePaymentGatewayBase {
    */
   public function refundPayment(PaymentInterface $payment, Price $amount = NULL) {
 
-
+    // Get configuration values.
     $key_id = $this->configuration['key_id'];
     $key_secret = $this->configuration['key_secret'];
     $api = new Api($key_id, $key_secret);
@@ -155,12 +148,9 @@ class RazorpayRedirect extends OffsitePaymentGatewayBase {
     if (empty($payment->getRemoteId())) {
       throw new InvalidRequestException('Could not determine the remote payment details.');
     }
-
+    // At present remote id razorpay payment id.
     $razorpay_payment_id = $payment->getRemoteId();
     $razorpay_payment = $api->payment->fetch($razorpay_payment_id);
-
-
-
 
     if (!in_array($payment->getState()->value, ['capture_completed', 'capture_partially_refunded'])) {
       throw new \InvalidArgumentException('Only payments in the "capture_completed" and "capture_partially_refunded" states can be refunded.');
@@ -175,18 +165,9 @@ class RazorpayRedirect extends OffsitePaymentGatewayBase {
       throw new InvalidRequestException(sprintf("Can't refund more than %s.", $balance->__toString()));
     }
 
-
-
     try {
       $old_refunded_amount = $payment->getRefundedAmount();
       $new_refunded_amount = $old_refunded_amount->add($amount);
-
-//      if($new_refunded_amount == '') {
-//        $payment->refund();
-//      } else {
-//        $payment->refund(array('amount' => $new_refunded_amount* 100)); // for partial refund
-//      }
-
 
       if ($new_refunded_amount->lessThan($payment->getAmount())) {
         $payment->state = 'capture_partially_refunded';
@@ -197,9 +178,7 @@ class RazorpayRedirect extends OffsitePaymentGatewayBase {
         $razorpay_payment->refund(array('amount' => $new_refunded_amount* 100)); // for partial refund
       }
 
-      $payment
-        ->setRefundedAmount($new_refunded_amount)
-        ->save();
+      $payment->setRefundedAmount($new_refunded_amount)->save();
     }
     catch (RequestException $e) {
       throw new InvalidRequestException("Could not refund the payment.", $e->getCode(), $e);
